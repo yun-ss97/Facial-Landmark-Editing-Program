@@ -286,26 +286,12 @@ class MainWindow(QMainWindow):
         uploadFoBut.resize(140, 50)
         uploadFoBut.move(buttonWidget.x() + 5, buttonWidget.y() + 290)
 
-        """
+
         # create text label
-        textLb = QLabel()
-        textLb.move(buttonWidget.x() + 5, buttonWidget.y() + 350)
-        update = str(self.currentImage.path)
-        textLb.setText("image name: = {0}".format(update))
-        #update = textLb.text()
-        
-        textLb = QLabel(buttonWidget)
-        textLb.move(buttonWidget.x() + 5, buttonWidget.y() + 380)
-        textLb.setFont(QFont('Futura', 10))
-        textLb.setText('Image Name: ')
-
-        textLine = QLineEdit(buttonWidget)
-        textLine.move(buttonWidget.x() + 5, buttonWidget.y() + 400)
-        #textLine.setReadOnly(True)
-        
-        """
-
-
+        self.textLb = QLabel(buttonWidget)
+        self.textLb.move(buttonWidget.x() + 5, buttonWidget.y() + 380)
+        self.textLb.setFont(QFont('Futura', 12))
+        self.textLb.setText('Image: ')
 
         # create detect label
         detectLb = QLabel("2. Detect", buttonWidget)
@@ -467,7 +453,8 @@ class MainWindow(QMainWindow):
 
                 self.drawPoints(numbers)
 
-
+            self.textLb.setText('Image :' + str(self.currentImage.name))
+            self.textLb.adjustSize()
 
     def leftArrowButClicked(self):
 
@@ -503,7 +490,8 @@ class MainWindow(QMainWindow):
 
                 self.drawPoints(numbers)
 
-
+            self.textLb.setText('Image :' + str(self.currentImage.name))
+            self.textLb.adjustSize()
 
     def saveButClicked(self):
         ##
@@ -536,8 +524,9 @@ class MainWindow(QMainWindow):
 
         # get the path of file
         fNamePath = QFileDialog.getOpenFileName(self, "Open Image", "/home/", "Image Files (*.png *.jpg *.bmp *.jpeg *.gif)")
+
         self.currentImage.path = fNamePath[0]
-        #self.textLine.setText(self.currentImage.path)
+
 
         if self.currentImage.path == "": #if esc was pressed or no image was chosen, do not set empty path as current image path
             pass
@@ -545,7 +534,9 @@ class MainWindow(QMainWindow):
             # upload images on grpahicView
             self.currentImage.pixmap = QPixmap(self.currentImage.path)
             self.viewer.setPhoto(self.currentImage.pixmap)
-
+            #print(os.path.basename(self.currentImage.path))
+            self.textLb.setText('Image :' + str(os.path.basename(self.currentImage.path)))
+            self.textLb.adjustSize()
 
 
     def uploadFoButClicked(self):
@@ -564,8 +555,9 @@ class MainWindow(QMainWindow):
 
             # put each corresponding image into imageFolder
             for files_ext in os.listdir(dir_):
-
                 imagePath = dir_ + '/' + files_ext
+                self.textLb.setText('Image : ' + str(files_ext))
+                self.textLb.adjustSize()
 
                 try:
                     if imghdr.what(imagePath) is "jpg" or imghdr.what(imagePath) is "png" or imghdr.what(imagePath) is "jpeg" or imghdr.what(imagePath) is "gif":
@@ -648,12 +640,6 @@ class MainWindow(QMainWindow):
                 self.drawPoints(numbers)
             else:
                 self.clickMethod2()
-
-    def label_update(self):
-        update = self.currentImage.path
-        print(update)
-        #self.textLb.setText(update)
-        #self.textLb.setText("")
 
     def clickMethod(self):
         QMessageBox.about(self, "Warning", "Landmark is empty. Try detection again.")
