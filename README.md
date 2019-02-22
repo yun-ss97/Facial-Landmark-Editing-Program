@@ -9,4 +9,4 @@ Program for editing facial landmarks.
 > - Available in: Windows 10
 
 Example:
-![uiexample](https://user-images.githubusercontent.com/45190139/53225678-2b512300-36bc-11e9-9e12-26ddc28ed276.PNG)
+![ui](https://user-images.githubusercontent.com/45190139/53229549-dd421c80-36c7-11e9-8471-5c5bbd24fbc6.PNG)
