@@ -1,5 +1,3 @@
-#fix the problem of not detecting correct landmarks when low resolution images are given.
-
 import sys
 import os
 import face_alignment
@@ -13,8 +11,8 @@ from PyQt5.Qt import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 import qdarkgraystyle
-import time
 
+#contains name, points, pixmap image, paths, and landmarkpaths of image
 class ImageSet:
     def __init__(self):
         self.__pixmap = None
@@ -64,11 +62,12 @@ class ImageSet:
         self.__name = name
 
 
+#upload the image to viewer and add landmarks on it
 class PhotoViewer(QGraphicsView):
 
     def __init__(self):
         super(PhotoViewer, self).__init__()
-        self.dw = QDesktopWidget()
+        self.dw = QDesktopWidget() #desktop Widget size
         self._zoom = 0  # size of zoom
         self._empty = True  # whether viwer is empty
         self._scene = QGraphicsScene(self)  # scene to be uploaded
@@ -85,7 +84,7 @@ class PhotoViewer(QGraphicsView):
     def hasPhoto(self):
         return not self._empty
 
-    def fitInView2(self, scale=True):
+    def fitInView2(self):
         rect = QRectF(self._photo.pixmap().rect())
         if not rect.isNull():
             self._scene.setSceneRect(rect)
@@ -180,7 +179,8 @@ class Landmark_path(QGraphicsPathItem):
     def mouseReleaseEvent(self, event):
         event.accept()
         super(Landmark_path, self).mouseReleaseEvent(event)
-        point = self.mapToScene(event.pos().x(), event.pos().y())
+        pos = self.scenePos()
+        point = self.mapToScene(pos.x(), pos.y())
         self.x = point.x()
         self.y = point.y()
 
@@ -207,7 +207,7 @@ class MainWindow(QMainWindow):
         self.imageFolderIndex = 0  # index of current image shown in image folder
         self.imageFolderText = {}  # dictionary of texts that correspond to image in folder
         self.drawn = False #whether landmarks are drawn or not
-        self.time_total = 0
+
         self.initUI()  # initiate UI
 
     def initUI(self):
@@ -215,7 +215,6 @@ class MainWindow(QMainWindow):
         # resize the size of window
         self.setWindowTitle(self.title)
         self.setGeometry(self.x, self.y, self.width, self.height)
-        self.setWindowIcon(QIcon('icon4.png'))
 
         # add graphic View into centralWidget
         self.viewer = PhotoViewer()
@@ -225,43 +224,27 @@ class MainWindow(QMainWindow):
         # create Widget and layout for buttons on the right
         buttonWidget = QWidget()
 
-        #buttonWidget.setStyleSheet("background-color:#3C3530")
-        #buttonWidget.setScaledContents(True)
-
-        #self.stylesheet =
-
-        """
-        pyqtcss.available_styles()
-        ['classic', 'dark_blue', 'dark_orange']
-
-        style_string = pyqtcss.get_style("dark_blue")
-        buttonWidget.setStyleSheet(style_string)
-        """
-
         #create radioButton for detector
-        groupBox = QGroupBox("Detector", buttonWidget)
+        groupBox = QGroupBox("Type of Detector", buttonWidget)
         groupBox.move(buttonWidget.x() + 5, buttonWidget.y() + 10)
-        groupBox.setFont(QFont("Book Antiqua", 12,  QFont.Bold))
+        groupBox.resize(140,120)
+        groupBox.setStyleSheet("background-color:#F16B6F")
 
         self.radio1 = QRadioButton("Pytorch", groupBox)
-        self.radio1.move(buttonWidget.x() + 5, buttonWidget.y() + 30)
-        self.radio1.setFont(QFont("Futura", 10))
+        self.radio1.move(buttonWidget.x() + 5, buttonWidget.y() + 25)
         self.radio1.clicked.connect(self.radioButtonClicked)
         self.radio1.setChecked(True) #default is pytorch
 
         self.radio2 = QRadioButton("Dlib", groupBox)
-        self.radio2.move(buttonWidget.x() + 5, buttonWidget.y() + 50)
-        self.radio2.setFont(QFont("Futura", 10))
+        self.radio2.move(buttonWidget.x() + 5, buttonWidget.y() + 45)
         self.radio2.clicked.connect(self.radioButtonClicked)
 
         self.radio3 = QRadioButton("CLM", groupBox)
-        self.radio3.move(buttonWidget.x() + 5, buttonWidget.y() + 70)
-        self.radio3.setFont(QFont("Futura", 10))
+        self.radio3.move(buttonWidget.x() + 5, buttonWidget.y() + 65)
         self.radio3.clicked.connect(self.radioButtonClicked)
 
         self.radio4 = QRadioButton("CSC", groupBox)
-        self.radio4.move(buttonWidget.x() + 5, buttonWidget.y() + 90)
-        self.radio4.setFont(QFont("Futura", 10))
+        self.radio4.move(buttonWidget.x() + 5, buttonWidget.y() + 85)
         self.radio4.clicked.connect(self.radioButtonClicked)
 
         # create upload label
@@ -271,27 +254,19 @@ class MainWindow(QMainWindow):
 
         # create upload buttons
         uploadImBut = QPushButton('Image(ctrl+i)', buttonWidget)
-        uploadImBut.setFont(QFont('Futura',13))
+        uploadImBut.setFont(QFont('Futura',13, QFont.Bold))
         uploadImBut.resize(140, 50)
         uploadImBut.move(buttonWidget.x() + 5, buttonWidget.y() + 235)
-        #uploadImBut.setStyleSheet("background-color:#F16B6F; color:#8e8e8e; padding-top: 5px; padding-left:10px")
 
         uploadTeBut = QPushButton('Text(ctrl+t)', buttonWidget)
-        uploadTeBut.setFont(QFont('Futura', 13))
+        uploadTeBut.setFont(QFont('Futura', 13, QFont.Bold))
         uploadTeBut.resize(140, 50)
         uploadTeBut.move(buttonWidget.x() + 150, buttonWidget.y() + 235)
 
-        uploadFoBut = QPushButton('Folder(ctrl+f)', buttonWidget)
-        uploadFoBut.setFont(QFont('Futura', 13))
+        uploadFoBut = QPushButton('folder(ctrl+f)', buttonWidget)
+        uploadFoBut.setFont(QFont('Futura', 13, QFont.Bold))
         uploadFoBut.resize(140, 50)
         uploadFoBut.move(buttonWidget.x() + 5, buttonWidget.y() + 290)
-
-
-        # create text label
-        self.textLb = QLabel(buttonWidget)
-        self.textLb.move(buttonWidget.x() + 5, buttonWidget.y() + 380)
-        self.textLb.setFont(QFont('Futura', 12))
-        self.textLb.setText('Image: ')
 
         # create detect label
         detectLb = QLabel("2. Detect", buttonWidget)
@@ -300,31 +275,29 @@ class MainWindow(QMainWindow):
 
         # create detect buttons
         detectBut = QPushButton('Detect(ctrl+d)', buttonWidget)
-        detectBut.setFont(QFont('Futura', 13))
+        detectBut.setFont(QFont('Futura', 13, QFont.Bold))
         detectBut.resize(140, 50)
         detectBut.move(buttonWidget.x() + 5, buttonWidget.y() + 485)
 
-        detectClBut = QPushButton('Clear(ctrl+c)', buttonWidget)
-        detectClBut.setFont(QFont('Futura', 13))
+        detectClBut = QPushButton('Detection Clear(ctrl+c)', buttonWidget)
+        detectClBut.setFont(QFont('Futura', 13, QFont.Bold))
         detectClBut.resize(140, 50)
         detectClBut.move(buttonWidget.x() + 150, buttonWidget.y() + 485)
 
         # create save label
         saveLb = QLabel("3. Save", buttonWidget)
-        saveLb.setFont(QFont("Book Antiqua", 14, QFont.Bold))
+        saveLb.setFont(QFont("Book Antiqua", 13, QFont.Bold))
         saveLb.move(buttonWidget.x(), buttonWidget.y() + 600)
 
         # create save buttons
         saveBut = QPushButton('Save(ctrl+s)', buttonWidget)
-        saveBut.setFont(QFont('Futura', 13))
+        saveBut.setFont(QFont('Futura', 13, QFont.Bold))
         saveBut.resize(140, 50)
         saveBut.move(buttonWidget.x() + 5, buttonWidget.y() + 635)
 
         # create left and right buttons
-        #right_arrow_pixmap = QPixmap('../Icons/right_arrow.png')
-        #left_arrow_pixmap = QPixmap('../Icons/left_arrow.png')
-        right_arrow_pixmap = QPixmap('right_arrow.png')
-        left_arrow_pixmap = QPixmap('left_arrow.png')
+        right_arrow_pixmap = QPixmap('Icons/right_arrow.png')
+        left_arrow_pixmap = QPixmap('Icons/left_arrow.png')
         right_arrow_icon = QIcon(right_arrow_pixmap)
         left_arrow_icon = QIcon(left_arrow_pixmap)
 
@@ -335,6 +308,12 @@ class MainWindow(QMainWindow):
 
         rightArrowBut.move(buttonWidget.x() + 150, buttonWidget.y() + 800)
         leftArrowBut.move(buttonWidget.x() + 120, buttonWidget.y() + 800)
+
+        # create text label
+        self.textLb = QLabel(buttonWidget)
+        self.textLb.move(buttonWidget.x() + 5, buttonWidget.y() + 380)
+        self.textLb.setFont(QFont('Futura', 12))
+        self.textLb.setText('Image: ')
 
         # create qdockwidget and add the button widget to it
         self.qDockWidget = QDockWidget("")
@@ -376,7 +355,7 @@ class MainWindow(QMainWindow):
             self.detectClButClicked()
             self.currentImage.landmarkPath.clear()
 
-        index = 0
+        index = 1
 
         pixmapWidth = self.currentImage.pixmap.width()
         pixmapHeight = self.currentImage.pixmap.height()
@@ -385,26 +364,30 @@ class MainWindow(QMainWindow):
         EllipSize = pixmapSize / 1000000
 
         for x, y in points:
+
+            if index > 68:
+                index = 1
+
             path = QPainterPath()
             font = QFont('Times', 2)  # font
             font.setPointSize(EllipSize + 2)
             font.setWeight(0.1)  # make font thinner
-            font.setLetterSpacing(QFont.PercentageSpacing,150)
+            font.setLetterSpacing(QFont.PercentageSpacing, 150)
             path.addText(5, 5, font, str(index))
 
             path.addEllipse(0, 0, EllipSize, EllipSize)
             qPen = QPen()
 
             # set color for each landmarkPath
-            if index <= 16 or 68 <= index <= 84:
+            if index <= 17:
                 qPen.setColor(QColor(150, 0, 0))
-            elif 17 <= index and index <= 26 or 85 <= index <= 94:
+            elif 18 <= index and index <= 26:
                 qPen.setColor(QColor(0, 150, 0))
-            elif 27 <= index and index <= 35 or 95 <= index <= 103:
+            elif 28 <= index and index <= 35:
                 qPen.setColor(QColor(0, 0, 150))
-            elif 36 <= index and index <= 47 or 104 <= index <= 115:
+            elif 37 <= index and index <= 47:
                 qPen.setColor(QColor(100, 100, 100))
-            elif 48 <= index and index <= 68 or 116 <= index <= 136:
+            elif 49 <= index and index <= 68:
                 qPen.setColor(QColor(50, 50, 50))
 
             # create landmark_point and add them to viwer
@@ -523,10 +506,11 @@ class MainWindow(QMainWindow):
             self.imageFolder.clear()
 
         # get the path of file
-        fNamePath = QFileDialog.getOpenFileName(self, "Open Image", "/home/", "Image Files (*.png *.jpg *.bmp *.jpeg *.gif)")
-
+        fNamePath = QFileDialog.getOpenFileName(self, "Open Image", "Image Files (*.png *.jpg *.bmp *.jpeg *.gif)")
+        #fNamePath = QFileDialog.getOpenFileName(self, 'Open file', '/home')
         self.currentImage.path = fNamePath[0]
 
+        print(fNamePath)
 
         if self.currentImage.path == "": #if esc was pressed or no image was chosen, do not set empty path as current image path
             pass
@@ -534,19 +518,15 @@ class MainWindow(QMainWindow):
             # upload images on grpahicView
             self.currentImage.pixmap = QPixmap(self.currentImage.path)
             self.viewer.setPhoto(self.currentImage.pixmap)
-            #print(os.path.basename(self.currentImage.path))
             self.textLb.setText('Image :' + str(os.path.basename(self.currentImage.path)))
             self.textLb.adjustSize()
 
-
     def uploadFoButClicked(self):
         # get the path of selected directory
-        dir_ = QFileDialog.getExistingDirectory(None, 'Open folder:', 'C:\\', QFileDialog.ShowDirsOnly)
-
+        dir_ = QFileDialog.getExistingDirectory(None, 'Open folder:', 'QDir.homePath()', QFileDialog.ShowDirsOnly)
 
         # if not choose any directory, just pass
         if not dir_:
-            print('hi')
             pass
         else:
             # if imageFolder is not empty, empty it
@@ -554,7 +534,8 @@ class MainWindow(QMainWindow):
                 self.imageFolder.clear()
 
             # put each corresponding image into imageFolder
-            for files_ext in os.listdir(dir_):
+            for files_ext in sorted(os.listdir(dir_)):
+
                 imagePath = dir_ + '/' + files_ext
                 self.textLb.setText('Image : ' + str(files_ext))
                 self.textLb.adjustSize()
@@ -566,6 +547,9 @@ class MainWindow(QMainWindow):
                         image.pixmap = imagePixmap
                         image.path = imagePath
                         image.name = files_ext
+
+                        #self.nameLb.setText(image.name)
+                        #self.nameLb.adjustSize()
 
                         self.imageFolder.append(image)
                     elif files_ext.endswith(".txt"):
@@ -641,6 +625,12 @@ class MainWindow(QMainWindow):
             else:
                 self.clickMethod2()
 
+    def label_update(self):
+        update = self.currentImage.path
+        print(update)
+        #self.textLb.setText(update)
+        #self.textLb.setText("")
+
     def clickMethod(self):
         QMessageBox.about(self, "Warning", "Landmark is empty. Try detection again.")
 
@@ -669,7 +659,6 @@ class MainWindow(QMainWindow):
             self.pytorch_detector()
         elif self.radio2.isChecked():
             self.dlib_detector()
-        #print("--- %s seconds ---" % (time.time() - start_time))
         time_d = time.time() - start_time
         print(time_d)
         self.time_total += time_d
@@ -702,7 +691,7 @@ class MainWindow(QMainWindow):
         gray = cv2.cvtColor(input, cv2.COLOR_BGR2GRAY)
         detector = dlib.get_frontal_face_detector()
         predictor = dlib.shape_predictor(
-            "shape_predictor_68_face_landmarks.dat"
+            "./shape_predictor_68_face_landmarks.dat"
         )
         dets = detector(gray, 1)
         points_all = []
@@ -713,7 +702,6 @@ class MainWindow(QMainWindow):
                 points_all.append(points)
 
         self.currentImage.point = points_all
-        #print(points_all)
         self.drawPoints(self.currentImage.point)
 
     #show which radio button was clicked
@@ -734,7 +722,6 @@ class MainWindow(QMainWindow):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    #stylesheet : darkgraystyle
     app.setStyleSheet(qdarkgraystyle.load_stylesheet())
     window = MainWindow()
     window.show()
