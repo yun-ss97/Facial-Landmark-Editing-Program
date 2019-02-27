@@ -15,7 +15,7 @@ import qdarkgraystyle
 #contains name, points, pixmap image, paths, and landmarkpaths of image
 class ImageSet:
     def __init__(self):
-        self.__pixmap = None
+        self.__pixmslap = None
         self.__path = ""
         self.__point = []
         self.__landmarkPath = []
@@ -67,7 +67,6 @@ class PhotoViewer(QGraphicsView):
 
     def __init__(self):
         super(PhotoViewer, self).__init__()
-        self.dw = QDesktopWidget() #desktop Widget size
         self._zoom = 0  # size of zoom
         self._empty = True  # whether viwer is empty
         self._scene = QGraphicsScene(self)  # scene to be uploaded
@@ -478,7 +477,6 @@ class MainWindow(QMainWindow):
 
     def saveButClicked(self):
         ##
-        print(self.time_total/(self.imageFolderIndex+1))
         if self.currentImage.landmarkPath != []:
         # get the path of directory where image is located at
 
@@ -509,8 +507,6 @@ class MainWindow(QMainWindow):
         fNamePath = QFileDialog.getOpenFileName(self, "Open Image", "Image Files (*.png *.jpg *.bmp *.jpeg *.gif)")
         #fNamePath = QFileDialog.getOpenFileName(self, 'Open file', '/home')
         self.currentImage.path = fNamePath[0]
-
-        print(fNamePath)
 
         if self.currentImage.path == "": #if esc was pressed or no image was chosen, do not set empty path as current image path
             pass
@@ -564,10 +560,10 @@ class MainWindow(QMainWindow):
                     else:
                         pass
                 except IsADirectoryError: #if there is a directory inside folder
-                    print('dir')
+                    self.clickMethod4()
                     pass
                 except PermissionError:#if there is permission error with the file
-                    print('permission error')
+                    self.clickMethod5()
                     pass
 
             self.imageFolderIndex = 0
@@ -627,7 +623,6 @@ class MainWindow(QMainWindow):
 
     def label_update(self):
         update = self.currentImage.path
-        print(update)
         #self.textLb.setText(update)
         #self.textLb.setText("")
 
@@ -639,6 +634,12 @@ class MainWindow(QMainWindow):
 
     def clickMethod3(self):
         QMessageBox.about(self, "Error", "No photo uploaded")
+
+    def clickMethod4(self):
+        QMessageBox.about(self, "Error", "There is folder file inside")
+
+    def clickMethod5(self):
+        QMessageBox.about(self, "Error", "Permission Error")
 
     def detectClButClicked(self):
 
@@ -652,16 +653,12 @@ class MainWindow(QMainWindow):
             self.drawn = False
 
     def detectButClicked(self):
-        start_time = time.time()
         if not self.viewer.hasPhoto():
             self.clickMethod3()
         elif self.radio1.isChecked():
             self.pytorch_detector()
         elif self.radio2.isChecked():
             self.dlib_detector()
-        time_d = time.time() - start_time
-        print(time_d)
-        self.time_total += time_d
 
     #adrain detector
     def pytorch_detector(self):
@@ -709,13 +706,10 @@ class MainWindow(QMainWindow):
         msg = ''
         if self.radio1.isChecked():
             msg = 'pytorch'
-            print(msg)
         elif self.radio2.isChecked():
             msg = 'dlib'
-            print(msg)
         elif self.radio3.isChecked():
             msg = 'CLM'
-            print(msg)
         else:
             msg = 'Ensemble of Regression Tree'
 
