@@ -1,5 +1,7 @@
 ### Facial Landmark Editing Program
-Program for editing facial landmarks.
+Software for editing facial landmarks.
+
+Manual: [Youtube](https://youtu.be/aEdKMc2ir5E)
 
 > **<i class="icon-file"></i>Note:**
 > - Tool for UI: PyQt5
